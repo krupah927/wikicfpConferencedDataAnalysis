@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<!-- this code contains code for visualization-->
+<meta charset="utf-8">
+<html>
+    
+<!-- style tag --> 
+<style>
+  .axis path,
+  .axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+  }
+
+  .axis text {
+      font-family: sans-serif;
+      font-size: 11px;
+  }
+    svg {
+    display: block;
+    margin: 0 auto;
+}
+</style>
+
+    <!-- div tag to hold svg to draw graph -->
+<div class="heatmap" ></div>
+<-- d3 source file --></-->
+<script src="https://d3js.org/d3.v3.min.js"></script>
+
+    <!-- d3 script to plot data -->
+<script>
+  var datapointSize = 22,
+      cellSize = datapointSize - 1,
+      margin = {top: 250, right: 200, bottom: 20, left: 110};
+   
+   // <!-- svg width and height -->
+  var width = 10000- margin.right - margin.left,
+      height = 3000 - margin.top - margin.bottom;
+
+ 
+//<!-- read assignment 4 4 output data -->
+  d3.csv('data.csv', function ( response ) {
+
+      //data to use in d3 code
+    var data = response.map(function( datapoint ) {
+        var newData = {};
+        newData.year = datapoint.year;
+        newData.location = datapoint.location;
+        newData.value = datapoint.value;
+
+        return newData;
+    })
+
+    var x_elements = d3.set(data.map(function( datapoint ) { return datapoint.location; } )).values(),
+        y_elements = d3.set(data.map(function( datapoint ) { return datapoint.year; } )).values();
+
+      //scale x axis
+    var xScale = d3.scale.ordinal()
+        .domain(x_elements)
+        .rangeBands([0, x_elements.length * datapointSize]);
+
+      // x axis define ticks and orientation
+    var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .tickFormat(function (d) {
+            return d;
+        })
+        .orient("top");
+
+      // y scale 
+    var yScale = d3.scale.ordinal()
+        .domain(y_elements)
+        .rangeBands([0, y_elements.length * datapointSize]);
+
+    var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .tickFormat(function (d) {
+            return d;
+        })
+        .orient("left");
+      
+      // color range for heat map
+    var colorScale = d3.scale.threshold()
+        .domain([1, 10])
+        .range(["#66cbdd", "#93d6e2", "#b20c1f"]);
+
+    var svg = d3.select('.heatmap')
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      // draw rctangles where data exist
+    var cells = svg.selectAll('rect')
+        .data(data)
+        .enter().append('g').append('rect')
+        .attr('class', 'cell')
+        .attr('width', cellSize)
+        .attr('height', cellSize)
+        .attr('y', function(d) { return yScale(d.year); })
+        .attr('x', function(d) { return xScale(d.location); })
+        .attr('fill', function(d) { return colorScale(d.value); });
+
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+        .selectAll('text')
+        .attr('font-weight', 'normal');
+//x axis labels
+    svg.append("g")
+        .attr("class", "x axis")
+        .call(xAxis)
+        .selectAll('text')
+        .attr('font-weight', 'normal')
+        .style("text-anchor", "start")
+        .attr("dx", ".8em")
+        .attr("dy", ".5em")
+        .attr("transform", function (d) {
+            return "rotate(-65)";
+        });
+  });
+</script>
+</html>
